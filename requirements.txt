@@ -1,0 +1,8 @@
+pandas
+numpy
+scikit-learn
+nltk
+datasets
+matplotlib
+seaborn
+hf_xet
