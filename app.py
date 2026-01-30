@@ -4,6 +4,7 @@ import string
 import joblib
 import docx
 import PyPDF2
+import numpy as np
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -46,15 +47,52 @@ model, tfidf_vectorizer = load_models()
 # --------------------------------------------------
 # Text Preprocessing
 # --------------------------------------------------
+from nltk.corpus import wordnet
+
+# Ensure robust POS tagging dependencies are present
+nltk.download('averaged_perceptron_tagger', quiet=True)
+
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
+# Function to map NLTK POS tags to WordNet POS tags
+def get_wordnet_pos(treebank_tag):
+    if treebank_tag.startswith('J'):
+        return wordnet.ADJ
+    elif treebank_tag.startswith('V'):
+        return wordnet.VERB
+    elif treebank_tag.startswith('N'):
+        return wordnet.NOUN
+    elif treebank_tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return wordnet.NOUN # Default to Noun
+
 def preprocess_text(text: str) -> str:
+    if not isinstance(text, str):
+        return ""
+    
+    # 1. Lowercase
     text = text.lower()
+    
+    # 2. Remove Punctuation
     text = text.translate(str.maketrans('', '', string.punctuation))
+    
+    # 3. Tokenize
     tokens = word_tokenize(text)
-    tokens = [lemmatizer.lemmatize(t) for t in tokens if t not in stop_words]
-    return " ".join(tokens)
+    
+    # 4. Part-of-Speech Tagging
+    pos_tags = nltk.pos_tag(tokens)
+    
+    # 5. Robust Lemmatization with POS Tags and Stopword Removal
+    cleaned_tokens = []
+    for word, tag in pos_tags:
+        if word not in stop_words:
+            # Use the POS tag to get the correct lemma (feature -> feature, featuring -> feature)
+            lemma = lemmatizer.lemmatize(word, pos=get_wordnet_pos(tag))
+            cleaned_tokens.append(lemma)
+            
+    return " ".join(cleaned_tokens)
 
 # --------------------------------------------------
 # File Readers
@@ -142,12 +180,26 @@ if st.button("🔍 Check Similarity", use_container_width=True):
             tfidf_1 = tfidf_vectorizer.transform([p1])
             tfidf_2 = tfidf_vectorizer.transform([p2])
 
+            # ---------------------------------------------------------
+            # Feature Construction (Must match training EXACTLY)
+            # ---------------------------------------------------------
+            
+            # 1. Scalar Features
             # Cosine similarity
             similarity_score = cosine_similarity(tfidf_1, tfidf_2)[0][0]
+            
+            scalar_features = np.array([[similarity_score]])
+            
+            # 2. Vector Features (Difference)
+            diff_vectors = abs(tfidf_1 - tfidf_2)
+            
+            # 3. Stack
+            from scipy.sparse import hstack
+            X_features = hstack([diff_vectors, scalar_features])
 
             # Model prediction
-            prediction = model.predict([[similarity_score]])[0]
-            confidence = model.predict_proba([[similarity_score]])[0][prediction]
+            prediction = model.predict(X_features)[0]
+            confidence = model.predict_proba(X_features)[0][prediction]
 
         # Results
         st.subheader("📊 Results")
