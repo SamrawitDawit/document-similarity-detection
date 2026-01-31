@@ -111,7 +111,7 @@ print("Accuracy:", accuracy_score(y_test, y_pred))
 ## ✅ Checking Accuracy of Results
 
 1.  **Direct Match**: Input "Hello world" and "Hello world".
-    *   *Result*: Cosine Similarity 1.0. Model Confidence ~99%.
+    *   *Result*: Cosine Similarity 1.0. Model Confidence ~99% and bigram difference.
 2.  **Semantic Match**: Input "How do I turn on my phone?" and "What is the way to switch on my mobile?".
     *   *Result*: Similarity should be high because of shared meaningful words (stopwords removed).
 3.  **Non-Match**: Input "I like cats" and "I hate dogs".
