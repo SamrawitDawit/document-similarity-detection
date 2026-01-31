@@ -33,8 +33,6 @@ streamlit run app.py
 
 ## 🧭 Code Defense Guide (Line-by-Line Explanation)
 
-Use this section to defend your project to your teacher.
-
 ### 📄 File: `document_similarity.ipynb` (Model Training)
 
 #### 1. Importing Libraries
@@ -111,8 +109,6 @@ print("Accuracy:", accuracy_score(y_test, y_pred))
 ---
 
 ## ✅ Checking Accuracy of Results
-
-During your defense, demonstrate accuracy by:
 
 1.  **Direct Match**: Input "Hello world" and "Hello world".
     *   *Result*: Cosine Similarity 1.0. Model Confidence ~99%.
